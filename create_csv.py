@@ -3,9 +3,12 @@ import gspread
 from io import StringIO
 from lxml import etree
 from oauth2client.service_account import ServiceAccountCredentials
+import os
 
 
-DEBUG = False
+DEBUG = os.environ.get('DEBUG', None)
+if DEBUG:
+    print('debug mode')
 
 tree = etree.parse('data/lobbyactivity-active.xml').getroot()
 rows = tree.xpath('/ROWSET/ROW')
@@ -19,15 +22,14 @@ def get_if_exists(tree, xpath):
     return ''
 
 for r in rows:
-    subject_matter_number = r.xpath('./SMNumber')[0].text
+    subject_matter_number = get_if_exists(r, './SMNumber')
+    print(subject_matter_number)
     for c in r.xpath('./Communications/Communication'):
         fields = [
             'LobbyistNumber',
             'LobbyistPositionTitle',
             'LobbyistFirstName',
-            'LobbyistMiddleInitial',
             'LobbyistLastName',
-            'SMNumber',
             'POH_Office',
             'POH_Type',
             'POH_Position',
@@ -35,10 +37,10 @@ for r in rows:
             'CommunicationDate',
         ]
         comm = {}
-        comm['SMNumber'] = subject_matter_number
         for f in fields:
             comm[f] = get_if_exists(c, './'+f)
-        print(comm['CommunicationDate'])
+        fields = ['SMNumber'] + fields
+        comm['SMNumber'] = subject_matter_number
         communications.append(comm)
 
 csvfile = StringIO()
