@@ -9,7 +9,7 @@ DEBUG = False
 
 tree = etree.parse('data/lobbyactivity-active.xml').getroot()
 rows = tree.xpath('/ROWSET/ROW')
-entries = []
+communications = []
 
 def get_if_exists(tree, xpath):
     result = tree.xpath(xpath)
@@ -19,23 +19,36 @@ def get_if_exists(tree, xpath):
     return ''
 
 for r in rows:
-    entry = {}
-    entry['subject_matter_id'] = r.xpath('./SMNumber')[0].text
-    entry['registrant_id']     = r.xpath('./Registrant/RegistrationNUmber')[0].text
+    subject_matter_number = r.xpath('./SMNumber')[0].text
     for c in r.xpath('./Communications/Communication'):
-        entry['lobbied_person'] = get_if_exists(c, './POH_Name')
-        entry['lobbied_office'] = get_if_exists(c, './POH_Office')
-        entries.append(entry)
+        fields = [
+            'LobbyistNumber',
+            'LobbyistPositionTitle',
+            'LobbyistFirstName',
+            'LobbyistMiddleInitial',
+            'LobbyistLastName',
+            'SMNumber',
+            'POH_Office',
+            'POH_Type',
+            'POH_Position',
+            'POH_Name',
+            'CommunicationDate',
+        ]
+        comm = {}
+        comm['SMNumber'] = subject_matter_number
+        for f in fields:
+            comm[f] = get_if_exists(c, './'+f)
+        print(comm['CommunicationDate'])
+        communications.append(comm)
 
 csvfile = StringIO()
-fields = ['subject_matter_id', 'registrant_id', 'lobbied_person', 'lobbied_office']
 writer = csv.DictWriter(csvfile, fieldnames=fields)
 writer.writeheader()
-for e in entries:
-    writer.writerow(e)
+for c in communications:
+    writer.writerow(c)
 
 if DEBUG:
-    with open('data/registry.csv', 'w') as f:
+    with open('data/communications.csv', 'w') as f:
         f.write(csvfile.getvalue())
 else:
     scope = ['https://spreadsheets.google.com/feeds',
