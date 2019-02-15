@@ -10,7 +10,9 @@ This code repository consists of:
 
 1. A command-line tool for converting the raw XML into CSV.
 1. A command-line tool for uploading this CSV to a Google Spreadsheet.
+   [:memo: CSV][csv]
 1. A configuration to run the tool nightly in the cloud.
+   [:scroll: Logs][ci-workflow]
 
 ## Usage
 
@@ -57,3 +59,6 @@ Options:
    [click]: http://click.pocoo.org/7/
    [circleci]: https://circleci.com/docs/2.0/about-circleci/
    [circleci-cron]: https://support.circleci.com/hc/en-us/articles/115015481128-Scheduling-jobs-cron-for-builds-
+   [ci-workflow]: https://circleci.com/gh/patcon/workflows/toronto-lobbyist-registry-tools
+   [ci-master]: https://circleci.com/gh/patcon/toronto-lobbyist-registry-tools/tree/master
+   [csv]: https://docs.google.com/spreadsheets/d/1uCaEMd5jHKSaFwoLXhj06uB0AEca-hpK0Tr3E2jFTk8/edit#gid=472973700
