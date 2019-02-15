@@ -12,7 +12,7 @@ This code repository consists of:
 1. A command-line tool for uploading this CSV to a Google Spreadsheet.
    [:memo: CSV][csv]
 1. A configuration to run the tool nightly in the cloud.
-   [:scroll: Logs][ci-workflow]
+   [:scroll: Logs][ci-master]
 
 ## Usage
 
