@@ -26,7 +26,7 @@ jobs:
     # See sample.env file for full details
     environment: []
         # For the following sensitive envvars, check the CircleCI UI.
-        #   - DECRYPT_PASSWORD
+        #   - DECRYPTION_PASSWORD
         #
         # See: https://circleci.com/gh/CivicTechTO/civictechto-scripts/edit#env-vars
     steps:
@@ -35,7 +35,7 @@ jobs:
       - run: &decrypt_files
           name: decrypt files
           command: |
-            openssl aes-256-cbc -k "$DECRYPT_PASSWORD" -in service-key.json.enc -out service-key.json -d
+            openssl aes-256-cbc -k "$DECRYPTION_PASSWORD" -in service-key.json.enc -out service-key.json -d
       - restore_cache: &restore_cache
           keys:
           - cache-{{ checksum "Pipfile.lock" }}
@@ -63,4 +63,7 @@ jobs:
       - run:
           name: run script
           command: |
-            pipenv run python create_csv.py
+            wget http://opendata.toronto.ca/lobbyist/lobby.activity/lobbyactivity.zip
+            unzip lobbyactivity.zip -d data
+            pipenv run python cli.py data/lobbyactivity-active.xml \
+              --ouput-file data/communications.csv
