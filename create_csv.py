@@ -1,61 +1,92 @@
+import click
 import csv
 import gspread
-from io import StringIO
+import os
+import urllib.parse
+
 from lxml import etree
 from oauth2client.service_account import ServiceAccountCredentials
-import os
+
+from utils import generate_csv, get_if_exists
 
 
-DEBUG = os.environ.get('DEBUG', None)
-if DEBUG:
-    print('debug mode')
+CONTEXT_SETTINGS = dict(help_option_names=['--help', '-h'])
+GOOGLE_SCOPES = ['https://spreadsheets.google.com/feeds',
+                 'https://www.googleapis.com/auth/drive']
 
-tree = etree.parse('data/lobbyactivity-active.xml').getroot()
-rows = tree.xpath('/ROWSET/ROW')
-communications = []
+@click.command(context_settings=CONTEXT_SETTINGS)
+@click.argument('xml-file')
+@click.option('--output-file', '-o',
+              required=False,
+              help='If provided, will write local CSV file. Default: print to screen',
+              metavar='<file.csv>',
+              )
+@click.option('--output-gsheet',
+              required=False,
+              help='If provided with writable Google spreadsheet URL, CSV will be uploaded.',
+              metavar='<url/key>'
+              )
+@click.option('--google-creds',
+              default='service-key.json',
+              required=False,
+              help='JSON keyfile with Google service account credentials. Default: service-key.json',
+              metavar='<file>',
+              )
+def parse_xml(xml_file, output_file, output_gsheet, google_creds):
+    """Process XML file of Toronto lobbyist registry data into a CSV file.
 
-def get_if_exists(tree, xpath):
-    result = tree.xpath(xpath)
-    if result:
-        return result[0].text
+    TODO: Document how to generate Google service account credentials.
+    """
+    tree = etree.parse(xml_file).getroot()
+    rows = tree.xpath('/ROWSET/ROW')
+    communications = []
 
-    return ''
+    for i, r in enumerate(rows):
+        i = i + 1
+        if i % 10 == 0:
+                click.echo('Processing row {}/{}\r'.format(i, len(rows)), err=True, nl=False)
+        if i == len(rows):
+                click.echo('Processing row {}/{}'.format(i, len(rows)), err=True, nl=True)
+        subject_matter_number = get_if_exists(r, './SMNumber')
+        for c in r.xpath('./Communications/Communication'):
+            fields = [
+                'LobbyistNumber',
+                'LobbyistPositionTitle',
+                'LobbyistFirstName',
+                'LobbyistLastName',
+                'POH_Office',
+                'POH_Type',
+                'POH_Position',
+                'POH_Name',
+                'CommunicationDate',
+            ]
+            comm = {}
+            for f in fields:
+                comm[f] = get_if_exists(c, './'+f)
+            fields = ['SMNumber'] + fields
+            comm['SMNumber'] = subject_matter_number
+            communications.append(comm)
 
-for r in rows:
-    subject_matter_number = get_if_exists(r, './SMNumber')
-    print(subject_matter_number)
-    for c in r.xpath('./Communications/Communication'):
-        fields = [
-            'LobbyistNumber',
-            'LobbyistPositionTitle',
-            'LobbyistFirstName',
-            'LobbyistLastName',
-            'POH_Office',
-            'POH_Type',
-            'POH_Position',
-            'POH_Name',
-            'CommunicationDate',
-        ]
-        comm = {}
-        for f in fields:
-            comm[f] = get_if_exists(c, './'+f)
-        fields = ['SMNumber'] + fields
-        comm['SMNumber'] = subject_matter_number
-        communications.append(comm)
+    content = generate_csv(communications)
 
-csvfile = StringIO()
-writer = csv.DictWriter(csvfile, fieldnames=fields)
-writer.writeheader()
-for c in communications:
-    writer.writerow(c)
+    if output_file:
+        click.echo('Writing CSV data to: ' + output_file, err=True)
+        with open(output_file, 'w') as f:
+            f.write(content)
+    elif not output_gsheet:
+        click.echo(content)
 
-if DEBUG:
-    with open('data/communications.csv', 'w') as f:
-        f.write(csvfile.getvalue())
-else:
-    scope = ['https://spreadsheets.google.com/feeds',
-             'https://www.googleapis.com/auth/drive']
-    credentials = ServiceAccountCredentials.from_json_keyfile_name('service-key.json', scope)
-    gc = gspread.authorize(credentials)
-    spreadsheet_id = '1uCaEMd5jHKSaFwoLXhj06uB0AEca-hpK0Tr3E2jFTk8'
-    gc.import_csv(spreadsheet_id, csvfile.getvalue())
+    if output_gsheet and google_creds:
+        url_data = urllib.parse.urlsplit(output_gsheet)
+        if url_data.netloc == 'docs.google.com':
+            spreadsheet_key = url_data.path.split('/')[3]
+        else:
+            spreadsheet_key = output_gsheet
+
+        click.echo('Writing CSV data to: https://docs.google.com/spreadsheets/d/{}'.format(spreadsheet_key), err=True)
+        credentials = ServiceAccountCredentials.from_json_keyfile_name(google_creds, GOOGLE_SCOPES)
+        gc = gspread.authorize(credentials)
+        gc.import_csv(spreadsheet_key, content)
+
+if __name__ == '__main__':
+    parse_xml()
