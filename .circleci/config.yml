@@ -24,7 +24,7 @@ jobs:
     docker:
       - image: circleci/python:3.6.4
     # See sample.env file for full details
-    environment: []
+    #environment: []
         # For the following sensitive envvars, check the CircleCI UI.
         #   - DECRYPTION_PASSWORD
         #
