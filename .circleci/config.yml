@@ -66,4 +66,4 @@ jobs:
             wget http://opendata.toronto.ca/lobbyist/lobby.activity/lobbyactivity.zip
             unzip lobbyactivity.zip -d data
             pipenv run python cli.py data/lobbyactivity-active.xml \
-              --ouput-file data/communications.csv
+              --output-file data/communications.csv
