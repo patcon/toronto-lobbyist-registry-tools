@@ -49,6 +49,8 @@ def parse_xml(xml_file, output_file, output_gsheet, google_creds):
                 click.echo('Processing row {}/{}'.format(i, len(rows)), err=True, nl=True)
         subject_matter_number = get_if_exists(r, './SMNumber')
         for c in r.xpath('./Communications/Communication'):
+            comm = {}
+            comm['SMNumber'] = subject_matter_number
             fields = [
                 'LobbyistNumber',
                 'LobbyistPositionTitle',
@@ -60,11 +62,8 @@ def parse_xml(xml_file, output_file, output_gsheet, google_creds):
                 'POH_Name',
                 'CommunicationDate',
             ]
-            comm = {}
             for f in fields:
                 comm[f] = get_if_exists(c, './'+f)
-            fields = ['SMNumber'] + fields
-            comm['SMNumber'] = subject_matter_number
             communications.append(comm)
 
     content = generate_csv(communications)
