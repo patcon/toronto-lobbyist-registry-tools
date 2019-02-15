@@ -1,4 +1,4 @@
-# Toronto Lobbyist Registry Processor
+# Toronto Lobbyist Registry Tools
 
 A tool for processing Toronto's lobbyist data.
 
