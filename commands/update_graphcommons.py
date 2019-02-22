@@ -80,6 +80,7 @@ def update_graphcommons(xml_file, graph_id, api_key):
         registrations.append(reg)
 
     topics = []
+    click.echo('Generating signals to modify graph...')
     for r in registrations:
         node_existing = [n for n in nodes if n['name'] == r['SMNumber']]
         for sm in r['SubjectMatter']:
