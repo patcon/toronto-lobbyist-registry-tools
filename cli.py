@@ -61,11 +61,20 @@ def parse_xml(xml_file, output_file, output_gsheet, google_creds):
         # TODO: Be smarter with this. Maybe select the most important one via some criteria.
         firm_name = r.xpath('./Firms/Firm[1]/Name/text()').pop()
 
+
+        ## Client
+        client_name = r.xpath("./Beneficiaries/BENEFICIARY[contains(./Type, 'Client')][1]/Name/text()")
+        if client_name:
+            client_name = client_name.pop()
+        else:
+            client_name = ''
+
         ## Communications
         for c in r.xpath('./Communications/Communication'):
             comm = {}
             comm.update(subject_matter)
             comm['FirmName'] = firm_name
+            comm['ClientName'] = client_name
             fields = [
                 'LobbyistNumber',
                 'LobbyistPositionTitle',
@@ -76,6 +85,7 @@ def parse_xml(xml_file, output_file, output_gsheet, google_creds):
                 'POH_Position',
                 'POH_Name',
                 'CommunicationDate',
+                'CommunicationMethod',
             ]
             for f in fields:
                 comm[f] = get_if_exists(c, './'+f)
