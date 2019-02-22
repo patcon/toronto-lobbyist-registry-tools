@@ -9,10 +9,10 @@ format.
 This code repository consists of:
 
 1. A command-line tool for:
-  - converting the raw XML into CSV.
-  - uploading this CSV to a Google Spreadsheet. [:memo: CSV][csv]
-  - updating an online visualization of the relationships
-    [:globe_with_meridians: Graph][graph]
+    - converting the raw XML into CSV.
+    - uploading this CSV to a Google Spreadsheet. [:memo: CSV][csv]
+    - updating an online visualization of the relationships
+      [:globe_with_meridians: Graph][graph]
 1. A configuration to run the tool nightly in the cloud.
    [:scroll: Logs][ci-master]
 
@@ -86,3 +86,4 @@ Options:
    [ci-workflow]: https://circleci.com/gh/patcon/workflows/toronto-lobbyist-registry-tools
    [ci-master]: https://circleci.com/gh/patcon/toronto-lobbyist-registry-tools/tree/master
    [csv]: https://docs.google.com/spreadsheets/d/1uCaEMd5jHKSaFwoLXhj06uB0AEca-hpK0Tr3E2jFTk8/edit#gid=472973700
+   [graph]: https://graphcommons.com/graphs/67e77524-5144-483e-91a1-20cf24799377
