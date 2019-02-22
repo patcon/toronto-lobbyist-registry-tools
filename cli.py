@@ -56,6 +56,8 @@ def parse_xml(xml_file, output_file, output_gsheet, google_creds):
         for f in sm_fields:
             subject_matter[f] = get_if_exists(r, './'+f)
 
+        registrant_tree = r.xpath('./Registrant')[0]
+
         ## Business / Organization
         # We are only using the first Firm for now.
         # TODO: Be smarter with this. Maybe select the most important one via some criteria.
@@ -89,6 +91,17 @@ def parse_xml(xml_file, output_file, output_gsheet, google_creds):
             ]
             for f in fields:
                 comm[f] = get_if_exists(c, './'+f)
+
+            # These are missing on communications when the registrant did all the lobbying?
+            if not comm['LobbyistNumber']:
+                comm['LobbyistNumber'] = registrant_tree.xpath('./RegistrationNUmberWithSoNum/text()').pop()
+            if not comm['LobbyistPositionTitle']:
+                comm['LobbyistPositionTitle'] = registrant_tree.xpath('./PositionTitle/text()').pop()
+            if not comm['LobbyistFirstName']:
+                comm['LobbyistFirstName'] = registrant_tree.xpath('./FirstName/text()').pop()
+            if not comm['LobbyistLastName']:
+                comm['LobbyistLastName'] = registrant_tree.xpath('./LastName/text()').pop()
+
             communications.append(comm)
 
     content = generate_csv(communications)
