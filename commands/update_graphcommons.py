@@ -10,7 +10,7 @@ CONTEXT_SETTINGS = dict(help_option_names=['--help', '-h'])
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.argument('xml-file')
 @click.option('--graph-id',
-              default='67e77524-5144-483e-91a1-20cf24799377',
+              required=True,
               help='Graph Commons graph ID (find in graph url)',
               envvar='GRAPH_COMMONS_GRAPH_ID',
               metavar='<string>',
