@@ -25,9 +25,9 @@ $ pipenv install
 To run the processing command on a file:
 
 ```
-$ pipenv run python cli.py --help
+$ pipenv run python cli.py parse-xml --help
 
-Usage: cli.py [OPTIONS] XML_FILE
+Usage: cli.py parse-xml [OPTIONS] XML_FILE
 
   Process XML file of Toronto lobbyist registry data into a CSV file.
 
