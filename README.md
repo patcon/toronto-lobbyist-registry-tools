@@ -69,6 +69,8 @@ Options:
   -h, --help           Show this message and exit.
 ```
 
+![Screenshot of graph visualization](/docs/screenshot-graphcommons.png)
+
 ## Technologies Used
 
 - **Python.** A programming language common in scripting.
