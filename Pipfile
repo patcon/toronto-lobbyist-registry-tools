@@ -8,7 +8,7 @@ click = "*"
 gspread = "*"
 lxml = "*"
 oauth2client = "*"
-graphcommons = {editable = true, ref = "master", git = "https://github.com/graphcommons/graphcommons-python.git"}
+graphcommons = {editable = true, ref = "fix-maps", git = "https://github.com/patcon/graphcommons-python.git"}
 
 [dev-packages]
 ipython = "*"

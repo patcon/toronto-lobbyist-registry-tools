@@ -31,6 +31,20 @@ def update_graphcommons(xml_file, graph_id, api_key):
     rows = tree.xpath('/ROWSET/ROW')
     signals = []
     registrations = []
+    topics_relations = []
+
+    signals.append(Signal(
+        action='nodetype_create',
+        name='Topic',
+    ))
+    signals.append(Signal(
+        action='nodetype_create',
+        name='Registration',
+    ))
+    signals.append(Signal(
+        action='edgetype_create',
+        name='RELATES TO',
+    ))
 
     for i, r in enumerate(rows):
         i = i + 1
@@ -40,11 +54,32 @@ def update_graphcommons(xml_file, graph_id, api_key):
                 click.echo('Processing row {}/{}'.format(i, len(rows)), err=True, nl=True)
         reg = {
             'SMNumber': r.xpath('./SMNumber/text()').pop(),
+            'SubjectMatters': r.xpath('./SubjectMatter/text()').pop().split(';'),
         }
         registrations.append(reg)
 
+    topics = []
     for r in registrations:
         node_existing = [n for n in nodes if n['name'] == r['SMNumber']]
+        for sm in r['SubjectMatters']:
+            if sm not in topics:
+                topics.append(sm)
+                sig = Signal(
+                    action='node_create',
+                    name=sm,
+                    type='Topic',
+                )
+                signals.append(sig)
+            sig = Signal(
+                action='edge_create',
+                name='RELATES TO',
+                from_type='Registration',
+                from_name=r['SMNumber'],
+                to_type='Topic',
+                to_name=sm,
+            )
+            signals.append(sig)
+
         if node_existing:
             enode = node_existing.pop()
             # update signal
@@ -52,19 +87,19 @@ def update_graphcommons(xml_file, graph_id, api_key):
                 id=enode['id'],
                 action='node_update',
                 name=r['SMNumber'],
-                type='Subject Matter',
+                type='Registration',
             )
         else:
             # create signal
             sig = Signal(
                 action='node_create',
                 name=r['SMNumber'],
-                type='Subject Matter',
+                type='Registration',
             )
         signals.append(sig)
 
-    #click.echo('Clearing graph...')
-    #client.clear_graph(graph_id)
+    click.echo('Clearing graph...')
+    client.clear_graph(graph_id)
     click.echo('Updating graph...')
     client.update_graph(
         id=graph_id,

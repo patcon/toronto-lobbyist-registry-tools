@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "e267e7745168842b71e9d346912c38fe765a899a6fe0b2673f3cc3f1de79f930"
+            "sha256": "8303f681536f07769ff9661eec5f876db1c4ae1caeac857cc69cccf5705e19f3"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -26,8 +26,8 @@
         },
         "graphcommons": {
             "editable": true,
-            "git": "https://github.com/graphcommons/graphcommons-python.git",
-            "ref": "ebfa5bb2c800e17e6cffae83ece574f6d3a05428"
+            "git": "https://github.com/patcon/graphcommons-python.git",
+            "ref": "afd58ff3cef0335bcf0b339bdc8d5e34fdbbe9e0"
         },
         "gspread": {
             "hashes": [
