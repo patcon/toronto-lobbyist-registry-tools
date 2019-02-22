@@ -65,7 +65,7 @@ def update_graphcommons(xml_file, graph_id, api_key):
                 for m in comm['CommunicationMethod']:
                     COMM_METHODS = ['Meeting', 'Telephone', 'E-mail', '', 'MeetingsArranged', 'Written']
                     if m not in COMM_METHODS and not m.startswith('Other:'):
-                        print(m)
+                        raise 'Unexpected CommunicationMethod found...'
                 comm['InvolvedMeeting'] = True if 'Meeting' in comm['CommunicationMethod'] else False
                 comm['InvolvedTelephone'] = True if 'Telephone' in comm['CommunicationMethod'] else False
                 comm['InvolvedEmail'] = True if 'E-mail' in comm['CommunicationMethod'] else False
@@ -134,7 +134,6 @@ def update_graphcommons(xml_file, graph_id, api_key):
                     'particulars': r['Particulars'],
                 },
             )
-            print(r['SMNumber'])
         else:
             # create signal
             sig = Signal(
