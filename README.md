@@ -8,9 +8,11 @@ format.
 
 This code repository consists of:
 
-1. A command-line tool for converting the raw XML into CSV.
-1. A command-line tool for uploading this CSV to a Google Spreadsheet.
-   [:memo: CSV][csv]
+1. A command-line tool for:
+  - converting the raw XML into CSV.
+  - uploading this CSV to a Google Spreadsheet. [:memo: CSV][csv]
+  - updating an online visualization of the relationships
+    [:globe_with_meridians: Graph][graph]
 1. A configuration to run the tool nightly in the cloud.
    [:scroll: Logs][ci-master]
 
@@ -19,10 +21,18 @@ This code repository consists of:
 To prepare your local development environment for the first time:
 
 ```
+# Install Python package dependencies
 $ pipenv install
+
+# If you would like to set some configuration from environment variables,
+# use this scaffold file.
+cp sample.env .env
 ```
 
-To run the processing command on a file:
+### Command: `parse-xml`
+
+To process the xml file into spreadsheet format on either the local
+filesystem or Google Spreadsheet.
 
 ```
 $ pipenv run python cli.py parse-xml --help
@@ -44,6 +54,20 @@ Options:
 ```
 
 ![Screenshot of running the command](/docs/screenshot.png)
+
+### Command: `update-graphcommons`
+
+For updating a GraphCommons visualization from the XML.
+
+```
+$ pipenv run python cli.py update-graphcommons --help
+Usage: cli.py update-graphcommons [OPTIONS] XML_FILE
+
+Options:
+  --graph-id <string>  Graph Commons graph ID (find in graph url)
+  --api-key <string>   Graph Commons API key  [required]
+  -h, --help           Show this message and exit.
+```
 
 ## Technologies Used
 
