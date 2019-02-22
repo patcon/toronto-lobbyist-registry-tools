@@ -2,7 +2,7 @@ import click
 import os
 
 from graphcommons import GraphCommons, Signal
-from lxml import etree
+from lxml import objectify
 
 
 CONTEXT_SETTINGS = dict(help_option_names=['--help', '-h'])
@@ -10,7 +10,7 @@ CONTEXT_SETTINGS = dict(help_option_names=['--help', '-h'])
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.argument('xml-file')
 @click.option('--graph-id',
-              default='a19db181-31d2-4b57-b37e-312365173da7',
+              default='67e77524-5144-483e-91a1-20cf24799377',
               metavar='<string>',
               )
 @click.option('--api-key',
@@ -27,8 +27,6 @@ def update_graphcommons(xml_file, graph_id, api_key):
     nodes = list(graph.nodes)
     edges = list(graph.edges)
 
-    tree = etree.parse(xml_file).getroot()
-    rows = tree.xpath('/ROWSET/ROW')
     signals = []
     registrations = []
     topics_relations = []
@@ -46,39 +44,81 @@ def update_graphcommons(xml_file, graph_id, api_key):
         name='RELATES TO',
     ))
 
+    tree = objectify.parse(xml_file).getroot()
+    rows = tree.ROW
+
     for i, r in enumerate(rows):
         i = i + 1
         if i % 10 == 0:
                 click.echo('Processing row {}/{}\r'.format(i, len(rows)), err=True, nl=False)
         if i == len(rows):
                 click.echo('Processing row {}/{}'.format(i, len(rows)), err=True, nl=True)
-        reg = {
-            'SMNumber': r.xpath('./SMNumber/text()').pop(),
-            'SubjectMatters': r.xpath('./SubjectMatter/text()').pop().split(';'),
-        }
+        communications = []
+        if hasattr(r, 'Communications'):
+            for c in r.Communications.Communication:
+                discard_keys = ['LobbyistBusinessAddress']
+                # Converting to dict with strings.
+                comm = {str(k): str(c.__dict__[k]) for k in c.__dict__.keys() if (k not in discard_keys)}
+                comm['CommunicationMethod'] = comm['CommunicationMethod'].split(';')
+                for m in comm['CommunicationMethod']:
+                    COMM_METHODS = ['Meeting', 'Telephone', 'E-mail', '', 'MeetingsArranged', 'Written']
+                    if m not in COMM_METHODS and not m.startswith('Other:'):
+                        print(m)
+                comm['InvolvedMeeting'] = True if 'Meeting' in comm['CommunicationMethod'] else False
+                comm['InvolvedTelephone'] = True if 'Telephone' in comm['CommunicationMethod'] else False
+                comm['InvolvedEmail'] = True if 'E-mail' in comm['CommunicationMethod'] else False
+                comm['InvolvedOther'] = True if any([m.startswith("Other:") for m in comm['CommunicationMethod']]) else False
+                # TODO: Gather OtherDescription.
+                communications.append(comm)
+
+        discard_keys = ['Firms', 'Beneficiaries', 'Registrant', 'Communications']
+        # Converting to dict with strings.
+        reg = {str(k): str(r.__dict__[k]) for k in r.__dict__.keys() if (k not in discard_keys)}
+        reg['SubjectMatter'] = reg['SubjectMatter'].split(';')
         registrations.append(reg)
 
     topics = []
     for r in registrations:
         node_existing = [n for n in nodes if n['name'] == r['SMNumber']]
-        for sm in r['SubjectMatters']:
+        for sm in r['SubjectMatter']:
             if sm not in topics:
                 topics.append(sm)
+                topic = [n for n in nodes if n['name'] == sm]
+                if topic:
+                    topic = topic.pop()
+                    sig = Signal(
+                        action='node_update',
+                        id=topic['id'],
+                        name=sm,
+                        type='Topic',
+                    )
+                else:
+                    sig = Signal(
+                        action='node_create',
+                        name=sm,
+                        type='Topic',
+                    )
+                signals.append(sig)
+            edge = [e for e in edges if graph.get_node(e['from'])['name'] == r['SMNumber'] and graph.get_node(e['to'])['name'] == sm]
+            if edge:
+                # Update
+                edge = edge.pop()
+                #sig = Signal(
+                #    action='edge_update',
+                #    id=edge['id'],
+                #)
+                pass
+            else:
+                # Create
                 sig = Signal(
-                    action='node_create',
-                    name=sm,
-                    type='Topic',
+                    action='edge_create',
+                    name='RELATES TO',
+                    from_type='Registration',
+                    from_name=r['SMNumber'],
+                    to_type='Topic',
+                    to_name=sm,
                 )
                 signals.append(sig)
-            sig = Signal(
-                action='edge_create',
-                name='RELATES TO',
-                from_type='Registration',
-                from_name=r['SMNumber'],
-                to_type='Topic',
-                to_name=sm,
-            )
-            signals.append(sig)
 
         if node_existing:
             enode = node_existing.pop()
@@ -88,20 +128,34 @@ def update_graphcommons(xml_file, graph_id, api_key):
                 action='node_update',
                 name=r['SMNumber'],
                 type='Registration',
+                properties={
+                    'particulars': r['Particulars'],
+                },
             )
+            print(r['SMNumber'])
         else:
             # create signal
             sig = Signal(
                 action='node_create',
                 name=r['SMNumber'],
                 type='Registration',
+                properties={
+                    'particulars': r['Particulars'],
+                },
             )
         signals.append(sig)
 
-    click.echo('Clearing graph...')
-    client.clear_graph(graph_id)
-    click.echo('Updating graph...')
-    client.update_graph(
-        id=graph_id,
-        signals=signals[0:999],
-    )
+    #click.echo('Clearing graph...')
+    #client.clear_graph(graph_id)
+
+    def chunks(l, n):
+        """Yield successive n-sized chunks from l."""
+        for i in range(0, len(l), n):
+            yield l[i:i + n]
+
+    for chunk in chunks(signals, 1000):
+        click.echo('Updating chunk...')
+        client.update_graph(
+            id=graph_id,
+            signals=chunk,
+        )
