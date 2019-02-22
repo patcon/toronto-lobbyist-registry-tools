@@ -27,7 +27,7 @@
         "graphcommons": {
             "editable": true,
             "git": "https://github.com/patcon/graphcommons-python.git",
-            "ref": "afd58ff3cef0335bcf0b339bdc8d5e34fdbbe9e0"
+            "ref": "e04933cb80bfde94127fa166221b61e38ade6c0b"
         },
         "gspread": {
             "hashes": [
