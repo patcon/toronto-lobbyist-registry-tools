@@ -47,10 +47,25 @@ def parse_xml(xml_file, output_file, output_gsheet, google_creds):
                 click.echo('Processing row {}/{}\r'.format(i, len(rows)), err=True, nl=False)
         if i == len(rows):
                 click.echo('Processing row {}/{}'.format(i, len(rows)), err=True, nl=True)
-        subject_matter_number = get_if_exists(r, './SMNumber')
+        subject_matter = {}
+        sm_fields = [
+            'SMNumber',
+            'SubjectMatter',
+            'Particulars',
+        ]
+        for f in sm_fields:
+            subject_matter[f] = get_if_exists(r, './'+f)
+
+        ## Business / Organization
+        # We are only using the first Firm for now.
+        # TODO: Be smarter with this. Maybe select the most important one via some criteria.
+        firm_name = r.xpath('./Firms/Firm[1]/Name/text()').pop()
+
+        ## Communications
         for c in r.xpath('./Communications/Communication'):
             comm = {}
-            comm['SMNumber'] = subject_matter_number
+            comm.update(subject_matter)
+            comm['FirmName'] = firm_name
             fields = [
                 'LobbyistNumber',
                 'LobbyistPositionTitle',
