@@ -67,6 +67,7 @@ Options:
   --graph-id <string>  Graph Commons graph ID (find in graph url)
   --api-key <string>   Graph Commons API key  [required]
   -d, --delete         Delete all data from the graph before procesing
+  --noop               Skip API calls that change/destroy data
   -h, --help           Show this message and exit.
 ```
 

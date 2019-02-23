@@ -24,15 +24,20 @@ CONTEXT_SETTINGS = dict(help_option_names=['--help', '-h'])
 @click.option('--delete', '-d',
               help='Delete all data from the graph before procesing',
               is_flag=True,
-              default=False,
               )
-def update_graphcommons(xml_file, graph_id, api_key, delete):
+@click.option('--noop',
+              help='Skip API calls that change/destroy data',
+              is_flag=True,
+              )
+def update_graphcommons(xml_file, graph_id, api_key, delete, noop):
+    if noop: click.echo('>>> No-op mode: enabled (No operations affecting data will be run)')
 
     client = GraphCommons(api_key)
 
     if delete:
         click.echo('Clearing graph...')
-        client.clear_graph(graph_id)
+        if not noop:
+            client.clear_graph(graph_id)
 
     graph = client.graphs(graph_id)
     nodes = list(graph.nodes)
@@ -75,10 +80,10 @@ def update_graphcommons(xml_file, graph_id, api_key, delete):
                     COMM_METHODS = ['Meeting', 'Telephone', 'E-mail', '', 'MeetingsArranged', 'Written']
                     if m not in COMM_METHODS and not m.startswith('Other:'):
                         raise 'Unexpected CommunicationMethod found...'
-                comm['InvolvedMeeting'] = True if 'Meeting' in comm['CommunicationMethod'] else False
-                comm['InvolvedTelephone'] = True if 'Telephone' in comm['CommunicationMethod'] else False
-                comm['InvolvedEmail'] = True if 'E-mail' in comm['CommunicationMethod'] else False
-                comm['InvolvedOther'] = True if any([m.startswith("Other:") for m in comm['CommunicationMethod']]) else False
+                comm['IsMeeting'] = True if 'Meeting' in comm['CommunicationMethod'] else False
+                comm['IsTelephone'] = True if 'Telephone' in comm['CommunicationMethod'] else False
+                comm['IsEmail'] = True if 'E-mail' in comm['CommunicationMethod'] else False
+                comm['IsOther'] = True if any([m.startswith("Other:") for m in comm['CommunicationMethod']]) else False
                 # TODO: Gather OtherDescription.
                 communications.append(comm)
 
@@ -86,11 +91,14 @@ def update_graphcommons(xml_file, graph_id, api_key, delete):
         # Converting to dict with strings.
         reg = {str(k): str(r.__dict__[k]) for k in r.__dict__.keys() if (k not in discard_keys)}
         reg['SubjectMatter'] = reg['SubjectMatter'].split(';')
+        reg['Communications'] = communications
         registrations.append(reg)
 
     topics = []
     click.echo('Generating signals to modify graph...')
     for r in registrations:
+        for c in r['Communications']:
+            pass
         node_existing = [n for n in nodes if n['name'] == r['SMNumber']]
         for sm in r['SubjectMatter']:
             if sm not in topics:
@@ -163,7 +171,10 @@ def update_graphcommons(xml_file, graph_id, api_key, delete):
 
     for chunk in chunks(signals, 1000):
         click.echo('Updating chunk...')
-        client.update_graph(
-            id=graph_id,
-            signals=chunk,
-        )
+        if not noop:
+            client.update_graph(
+                id=graph_id,
+                signals=chunk,
+            )
+
+    if noop: click.echo('Command exited no-op mode without creating/updating any data.')
