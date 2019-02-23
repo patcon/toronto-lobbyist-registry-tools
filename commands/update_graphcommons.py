@@ -21,9 +21,18 @@ CONTEXT_SETTINGS = dict(help_option_names=['--help', '-h'])
               envvar='GRAPH_COMMONS_API_KEY',
               metavar='<string>',
               )
-def update_graphcommons(xml_file, graph_id, api_key):
+@click.option('--delete', '-d',
+              help='Delete all data from the graph before procesing',
+              is_flag=True,
+              default=False,
+              )
+def update_graphcommons(xml_file, graph_id, api_key, delete):
 
     client = GraphCommons(api_key)
+
+    if delete:
+        click.echo('Clearing graph...')
+        client.clear_graph(graph_id)
 
     graph = client.graphs(graph_id)
     nodes = list(graph.nodes)
@@ -146,9 +155,6 @@ def update_graphcommons(xml_file, graph_id, api_key):
                 },
             )
         signals.append(sig)
-
-    #click.echo('Clearing graph...')
-    #client.clear_graph(graph_id)
 
     def chunks(l, n):
         """Yield successive n-sized chunks from l."""
