@@ -81,6 +81,12 @@ Options:
 - [**CircleCI.**][circleci] A script-running service that [runs scheduled
   tasks][circleci-cron] for us in the cloud.
 
+## :raised_hands: Acknowledgements
+
+This tool was initially created at the request of [Bernard
+Rudny](https://twitter.com/brudny), in a barter deal that saw the
+exchange of one month's accomodation for a web scraper. Thanks Bernard!
+
 <!-- Links -->
    [data]: https://www.toronto.ca/city-government/data-research-maps/open-data/open-data-catalogue/#94202791-cb02-4a98-4b1f-0f301b6f89d3
    [registrar]: https://www.toronto.ca/city-government/accountability-operations-customer-service/accountability-officers/lobbyist-registrar/
